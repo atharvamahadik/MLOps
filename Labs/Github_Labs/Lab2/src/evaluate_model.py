@@ -3,7 +3,7 @@ from sklearn.metrics import f1_score
 from sklearn.model_selection import train_test_split
 import joblib, glob, sys
 import argparse
-from sklearn.datasets import make_classification
+from sklearn.datasets import load_breast_cancer
 
 sys.path.insert(0, os.path.abspath('..'))
 
@@ -22,16 +22,7 @@ if __name__=='__main__':
         
     try:
         # Check if the file exists within the folder
-        X, y = make_classification(
-                            n_samples=1000,
-                            n_features=6,
-                            n_informative=3,
-                            n_redundant=0,
-                            n_repeated=0,
-                            n_classes=2,
-                            random_state=0,
-                            shuffle=True,
-                        )
+        X, y = load_breast_cancer(return_X_y=True)
     except:
         raise ValueError('Failed to catching the data')
     
