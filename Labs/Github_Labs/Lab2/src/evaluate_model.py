@@ -1,5 +1,6 @@
 import pickle, os, json, random
 from sklearn.metrics import f1_score
+from sklearn.model_selection import train_test_split
 import joblib, glob, sys
 import argparse
 from sklearn.datasets import make_classification
@@ -22,7 +23,7 @@ if __name__=='__main__':
     try:
         # Check if the file exists within the folder
         X, y = make_classification(
-                            n_samples=random.randint(0, 2000),
+                            n_samples=1000,
                             n_features=6,
                             n_informative=3,
                             n_redundant=0,
@@ -34,8 +35,12 @@ if __name__=='__main__':
     except:
         raise ValueError('Failed to catching the data')
     
-    y_predict = model.predict(X)
-    metrics = {"F1_Score":f1_score(y, y_predict)}
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.2, random_state=42
+    )
+
+    y_predict = model.predict(X_test)
+    metrics = {"F1_Score": f1_score(y_test, y_predict)}
     
     # Save metrics to a JSON file
 
@@ -45,5 +50,7 @@ if __name__=='__main__':
         
     with open(f'{timestamp}_metrics.json', 'w') as metrics_file:
         json.dump(metrics, metrics_file, indent=4)
+    
+    print(f"Metrics: {metrics}")
                
     

@@ -3,7 +3,16 @@ name: Model Retraining on Push to Main - Github Lab 2
 on:
   push:
     branches:
-      - main  # Trigger the workflow on pushes to the main branch
+      - main
+    paths:
+      - 'Labs/Github_Labs/Lab2/**'
+      - '.github/workflows/github_lab2_model_calibration_on_push.yml'
+      - '!Labs/Github_Labs/Lab2/models/**'
+      - '!Labs/Github_Labs/Lab2/metrics/**'
+  workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   retrain:
@@ -14,7 +23,7 @@ jobs:
       uses: actions/checkout@v4
 
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: 3.9
 
@@ -28,11 +37,6 @@ jobs:
         echo "$timestamp" > timestamp.txt
         echo "timestamp=$timestamp" >> $GITHUB_ENV
 
-    - name: Check File Permissions
-      run: ls -l Labs/Github_Labs/Lab2/src/train_model.py
-
-    - name: Set File Permissions
-      run: chmod +x Labs/Github_Labs/Lab2/src/train_model.py
 
     - name: Retrain Model
       run: |
@@ -53,8 +57,8 @@ jobs:
 
     - name: Commit and Push Changes
       run: |
-        git config --global user.email "26876927+raminmohammadi@users.noreply.github.com"
-        git config --global user.name "raminmohammadi"
+        git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+        git config --global user.name "github-actions[bot]"
         metrics_filename="Labs/Github_Labs/Lab2/metrics/${timestamp}_metrics.json"
         model_filename="Labs/Github_Labs/Lab2/models/model_${timestamp}_dt_model.joblib"
         git add -f "$metrics_filename" "$model_filename"

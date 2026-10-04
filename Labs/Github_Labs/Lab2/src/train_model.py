@@ -1,4 +1,5 @@
 # from sklearn.datasets import fetch_rcv1
+from sklearn.model_selection import train_test_split
 import mlflow, datetime, os, pickle, random
 # import sklearn
 from joblib import dump
@@ -25,7 +26,7 @@ if __name__ == '__main__':
     
     # Check if the file exists within the folder
     X, y = make_classification(
-                            n_samples=random.randint(0, 2000),
+                            n_samples=1000,
                             n_features=6,
                             n_informative=3,
                             n_redundant=0,
@@ -34,6 +35,9 @@ if __name__ == '__main__':
                             random_state=0,
                             shuffle=True,
                         )
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.2, random_state=42
+    )
     if os.path.exists('data'): 
         with open('data/data.pickle', 'wb') as data:
             pickle.dump(X, data)
@@ -66,11 +70,11 @@ if __name__ == '__main__':
             
         
         forest = RandomForestClassifier(random_state=0)
-        forest.fit(X, y)
+        forest.fit(X_train, y_train)
         
-        y_predict = forest.predict(X)
-        mlflow.log_metrics({'Accuracy': accuracy_score(y, y_predict),
-                            'F1 Score': f1_score(y, y_predict)})
+        y_predict = forest.predict(X_test)
+        mlflow.log_metrics({'Accuracy': accuracy_score(y_test, y_predict),
+                            'F1 Score': f1_score(y_test, y_predict)})
         
         if not os.path.exists('models/'): 
             # then create it.
