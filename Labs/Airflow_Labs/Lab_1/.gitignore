@@ -1,0 +1,11 @@
+# Local Python environment
+airflow_lab1_env/
+__pycache__/
+
+# Airflow runtime files
+logs/
+plugins/
+.env
+
+# Pipeline outputs (regenerated on every run)
+working_data/

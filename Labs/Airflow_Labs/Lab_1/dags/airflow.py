@@ -1,61 +1,68 @@
-# Import necessary libraries and modules
-from airflow import DAG
-# from airflow.operators.python import PythonOperator
-from airflow.providers.standard.operators.python import PythonOperator
 from datetime import datetime, timedelta
-from src.lab import load_data, data_preprocessing, build_save_model, load_model_elbow
 
-# NOTE:
-# In Airflow 3.x, enabling XCom pickling should be done via environment variable:
-# export AIRFLOW__CORE__ENABLE_XCOM_PICKLING=True
-# The old airflow.configuration API is deprecated.
+from airflow.sdk import DAG
+from airflow.providers.standard.operators.python import PythonOperator
 
-# Define default arguments for your DAG
+from src.lab import (
+    load_data,
+    data_preprocessing,
+    compute_sse,
+    find_optimal_k,
+    train_final_model,
+    predict_test,
+)
+
 default_args = {
-    'owner': 'Ramin Mohammadi',
-    'start_date': datetime(2026, 1, 15),
-    'retries': 0,  # Number of retries in case of task failure
-    'retry_delay': timedelta(minutes=5),  # Delay before retries
+    "owner": "Atharva Mahadik",
+    "retries": 1,
+    "retry_delay": timedelta(minutes=1),
 }
 
-# Create a DAG instance named 'Airflow_Lab1' with the defined default arguments
 with DAG(
-    'Airflow_Lab1',
+    dag_id="Airflow_Lab1",
+    description="K-Means customer segmentation with elbow-based k selection",
+    doc_md=__doc__,
     default_args=default_args,
-    description='Dag example for Lab 1 of Airflow series',
-    catchup=False, 
+    start_date=datetime(2026, 1, 15),
+    schedule=None,
+    catchup=False,
+    tags=["mlops", "lab1", "kmeans"],
 ) as dag:
 
-    # Task to load data, calls the 'load_data' Python function
-    load_data_task = PythonOperator(
-        task_id='load_data_task',
-        python_callable=load_data,
-    )
+    load = PythonOperator(task_id="load_data", python_callable=load_data)
 
-    # Task to perform data preprocessing, depends on 'load_data_task'
-    data_preprocessing_task = PythonOperator(
-        task_id='data_preprocessing_task',
+    preprocess = PythonOperator(
+        task_id="preprocess_data",
         python_callable=data_preprocessing,
-        op_args=[load_data_task.output],
+        op_args=[load.output],
     )
 
-    # Task to build and save a model, depends on 'data_preprocessing_task'
-    build_save_model_task = PythonOperator(
-        task_id='build_save_model_task',
-        python_callable=build_save_model,
-        op_args=[data_preprocessing_task.output, "model.sav"],
+    sse = PythonOperator(
+        task_id="compute_sse",
+        python_callable=compute_sse,
+        op_args=[preprocess.output],
     )
 
-    # Task to load a model using the 'load_model_elbow' function, depends on 'build_save_model_task'
-    load_model_task = PythonOperator(
-        task_id='load_model_task',
-        python_callable=load_model_elbow,
-        op_args=["model.sav", build_save_model_task.output],
+    best_k = PythonOperator(
+        task_id="find_optimal_k",
+        python_callable=find_optimal_k,
+        op_args=[sse.output],
     )
 
-    # Set task dependencies
-    load_data_task >> data_preprocessing_task >> build_save_model_task >> load_model_task
+    train = PythonOperator(
+        task_id="train_final_model",
+        python_callable=train_final_model,
+        op_args=[preprocess.output, best_k.output],
+    )
 
-# If this script is run directly, allow command-line interaction with the DAG
+    predict = PythonOperator(
+        task_id="predict_test",
+        python_callable=predict_test,
+        op_args=[train.output],
+    )
+
+    load >> preprocess >> sse >> best_k >> train >> predict
+
+
 if __name__ == "__main__":
     dag.test()
