@@ -1,3 +1,22 @@
+# Changes in this fork (Atharva Mahadik)
+
+Runs on **Airflow 3.3.1** with Docker, using the included `docker-compose.yaml`
+(the setup steps below were written for Airflow 2.5.1). Before starting, add
+`AIRFLOW_UID` and `FERNET_KEY` to `.env`.
+
+- **Correct final model:** a final K-Means is trained with the elbow-selected k (8),
+  instead of saving the last model from the search loop (k = 49).
+- **Proper test preprocessing:** the fitted scaler is saved and reused, so `test.csv`
+  gets the same columns and scaling as the training data. Out-of-range values are flagged.
+- **All test rows predicted,** with results saved to `working_data/predictions.csv`.
+- **DAG split into 6 tasks:** `load_data → preprocess_data → compute_sse →
+  find_optimal_k → train_final_model → predict_test`
+- **XCom passes file paths and small values** instead of the whole base64-pickled dataset.
+- **Missing values dropped only in the 3 features used,** keeping 8,949 of 8,950 rows.
+- **Personalized DAG:** owner, description, tags, DAG docs, and 1 retry per task.
+
+---
+
 # Airflow lab
 
 - In order to install Airflow using docker you can watch our [Airflow Lab1 Tutorial Video](https://youtu.be/exFSeGUbn4Q?feature=shared)
