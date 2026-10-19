@@ -17,6 +17,8 @@ from src.model_development import (
     load_model,
 )
 
+OWNER_NAME = "Atharva Mahadik"
+
 # ---------- Default args ----------
 default_args = {
     "start_date": pendulum.datetime(2024, 1, 1, tz="UTC"),
@@ -27,11 +29,10 @@ default_args = {
 dag = DAG(
     dag_id="Airflow_Lab2",
     default_args=default_args,
-    description="Airflow-Lab2 DAG Description",
+    description="Ad-click prediction pipeline: scale features, train logistic regression, report metrics",
     schedule="@daily",
     catchup=False,
-    tags=["example"],
-    owner_links={"Ramin Mohammadi": "https://github.com/raminmohammadi/MLOps/"},
+    tags=["mlops", "lab2", "logistic-regression"],
     max_active_runs=1,
 )
 
@@ -39,15 +40,17 @@ dag = DAG(
 owner_task = BashOperator(
     task_id="task_using_linked_owner",
     bash_command="echo 1",
-    owner="Ramin Mohammadi",
+    owner=OWNER_NAME,
     dag=dag,
 )
 
+# Email notification is left disabled: it needs an SMTP connection configured
+# in Airflow (smtp_default) before it can send anything.
 # send_email = EmailOperator(
 #     task_id="send_email",
-#     to="rey.mhmmd@gmail.com",
-#     subject="Notification from Airflow",
-#     html_content="<p>This is a notification email sent from Airflow.</p>",
+#     to="your_email@example.com",
+#     subject="Airflow_Lab2 finished",
+#     html_content="<p>The Airflow_Lab2 pipeline run has finished.</p>",
 #     dag=dag,
 # )
 

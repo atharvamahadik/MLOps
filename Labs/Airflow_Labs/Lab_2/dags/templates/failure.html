@@ -59,12 +59,14 @@
         .meta-item {
             display: flex;
             justify-content: space-between;
+            gap: 16px;
             margin-bottom: 8px;
             font-size: 14px;
         }
         .meta-label { font-weight: 600; color: var(--text-muted); }
         .meta-value { color: var(--error-red); font-family: monospace; }
-
+        .meta-note { text-align: right; word-break: break-word; }
+ 
         .btn-group { display: flex; flex-direction: column; gap: 10px; }
         .btn {
             width: 100%;
@@ -87,12 +89,22 @@
         <div class="icon-circle">!</div>
         <h1>Execution Interrupted</h1>
         <p>The DAG <strong>{{ run_id }}</strong> encountered a critical error during execution.</p>
-
+ 
         <div class="metadata-grid">
             <div class="meta-item">
                 <span class="meta-label">Status</span>
                 <span class="meta-value">FAILED</span>
             </div>
+            <div class="meta-item">
+                <span class="meta-label">State</span>
+                <span class="meta-value">{{ state }}</span>
+            </div>
+            {% if note %}
+            <div class="meta-item">
+                <span class="meta-label">Note</span>
+                <span class="meta-value meta-note">{{ note }}</span>
+            </div>
+            {% endif %}
             <div class="meta-item">
                 <span class="meta-label">Detected At</span>
                 <span class="meta-value" id="current-time"></span>
@@ -102,13 +114,13 @@
                 <span class="meta-value" style="color:#64748b">#{{ run_id[:8] }}</span>
             </div>
         </div>
-
+ 
         <div class="btn-group">
             <a href="mailto:support@example.com?subject=Pipeline Failure: {{ run_id }}" class="btn btn-danger">Report Incident</a>
             <a href="http://localhost:8080" class="btn btn-outline">Re-run Manually</a>
         </div>
     </div>
-
+ 
     <script>
         document.getElementById('current-time').textContent = new Date().toLocaleString();
     </script>

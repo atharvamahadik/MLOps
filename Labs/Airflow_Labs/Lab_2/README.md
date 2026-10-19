@@ -1,3 +1,68 @@
+# My Changes
+
+This is my version of Airflow Lab 2, run on Airflow 3.3.1 with Docker Compose on macOS. The original lab description follows unchanged below this section.
+
+## Environment setup
+
+I used the official Airflow 3.3.1 `docker-compose.yaml` with these edits:
+
+- `_PIP_ADDITIONAL_REQUIREMENTS` set to `pandas scikit-learn flask requests`
+- `LOAD_EXAMPLES` set to `false`
+- `AIRFLOW_USERNAME` and `AIRFLOW_PASSWORD` environment variables mapped from the login in `.env`
+- `./working_data` and `./model` mounted into the containers at `/opt/airflow/...`
+- Port `5555` published on `airflow-worker` so the Flask dashboard is reachable from the host
+
+Credentials live in `.env`, which is not committed.
+
+## What I changed
+
+### 1. Fixed the Flask dashboard authentication (`Flask_API.py`)
+The original code called the Airflow REST API with HTTP basic auth. Airflow 3 rejects that with a `401`, so the dashboard always showed the failure page with `N/A` values, even after a successful run. The dashboard now requests a JWT from `POST /auth/token` and sends it as an `Authorization: Bearer` header. The token is cached and refreshed, and a request that gets a `401` is retried once with a fresh token.
+
+### 2. Handled the port 5555 conflict (`Flask_API.py`)
+Starting Flask a second time crashed the task with "address already in use". The task now checks whether port 5555 is taken and, if so, exits cleanly instead of failing, so reruns of `Airflow_Lab2` no longer produce a red Flask task.
+
+### 3. Fixed the feature scaling (`model_development.py`)
+The original preprocessing applied both `MinMaxScaler` and `StandardScaler` to the same columns, and also scaled the binary `Male` column. Now a single `StandardScaler` is applied to the four continuous columns only (`Daily Time Spent on Site`, `Age`, `Area Income`, `Daily Internet Usage`), and `Male` passes through unchanged. The fitted scaler is saved to `model/scaler.pkl` so new data can be scaled the same way as the training data.
+
+### 4. Added full evaluation metrics (`model_development.py`)
+`load_model` previously only printed accuracy. It now computes accuracy, precision, recall and F1 on the test set, prints them to the task log, and writes them to `model/metrics.json`.
+
+### 5. Updated the dashboard (`Flask_API.py`, `success.html`, `failure.html`)
+- The success page has a new "Model Performance" card that reads `metrics.json` and shows the model name, accuracy, F1, precision, recall, the number of test samples and the training time. If the file is missing, the page shows "Metrics not available yet" instead of failing.
+- The failure page now shows the run state and the note explaining why (for example "Model pipeline is still in progress..." or an API error), which was previously collected but never displayed.
+
+### 6. Personalized the DAG (`main.py`)
+- Owner changed to my name, with a matching `owner_links` entry
+- Tags changed from `example` to `mlops`, `lab2` and `logistic-regression`
+- A description that explains what the pipeline does
+- The instructor's email address was removed from the commented-out notification task. The email task stays disabled because it needs an SMTP connection configured in Airflow first.
+
+## Results
+
+Latest run, logistic regression on the 300-sample test split:
+
+| Metric | Value |
+| --- | --- |
+| Accuracy | 0.97 |
+| Precision | 0.9801 |
+| Recall | 0.961 |
+| F1 | 0.9705 |
+
+All seven tasks in `Airflow_Lab2` succeed, and the dashboard at `http://localhost:5555` shows the success page with the metrics card.
+
+## Notes for rerunning
+
+Flask keeps running as a long-lived task, so it holds the code and templates it started with. After editing `Flask_API.py` or the templates, restart the worker so the new version loads, then trigger `Airflow_Lab2_Flask`:
+
+```bash
+docker compose restart airflow-worker
+```
+
+Plain reruns of `Airflow_Lab2` do not need a restart.
+
+---
+
 # Airflow Lab Instructions and Description
 
 ## Introduction
@@ -101,4 +166,3 @@ Additionally, the integration of email notifications enhances the workflow's vis
 Furthermore, the Airflow_Lab2_Flask DAG facilitates the management of a Flask API, enabling users to access endpoints for checking the status of the machine learning pipeline. By querying the last DAG run status, the API delivers real-time feedback, empowering users to make informed decisions based on the pipeline's performance.
 
 Overall, this project demonstrates the power of Apache Airflow in orchestrating complex workflows and integrating external systems seamlessly. By following the provided instructions and understanding the workflow's structure, users can leverage Airflow to streamline their machine learning pipelines and enhance operational efficiency.
-
