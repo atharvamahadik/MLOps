@@ -33,10 +33,10 @@ The original preprocessing applied both `MinMaxScaler` and `StandardScaler` to t
 - The failure page now shows the run state and the note explaining why (for example "Model pipeline is still in progress..." or an API error), which was previously collected but never displayed.
 
 ### 6. Personalized the DAG (`main.py`)
-- Owner changed to my name, with a matching `owner_links` entry
+- Owner changed to my name
 - Tags changed from `example` to `mlops`, `lab2` and `logistic-regression`
 - A description that explains what the pipeline does
-- The instructor's email address was removed from the commented-out notification task. The email task stays disabled because it needs an SMTP connection configured in Airflow first.
+- The instructor's email address was removed from the commented-out notification task, which stays disabled because it needs an SMTP connection configured in Airflow first.
 
 ## Results
 
