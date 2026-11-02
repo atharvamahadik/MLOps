@@ -11,7 +11,6 @@ from airflow.providers.standard.operators.python import PythonOperator
 from flask import Flask, redirect, render_template
 
 # ---------- Config ----------
-# Ensure WEBSERVER points to 'airflow-apiserver' as defined in your compose
 WEBSERVER = os.getenv("AIRFLOW_WEBSERVER", "http://airflow-apiserver:8080")
 AF_USER   = os.getenv("AIRFLOW_USERNAME", "airflow")
 AF_PASS   = os.getenv("AIRFLOW_PASSWORD", "airflow")
@@ -28,7 +27,7 @@ app = Flask(__name__, template_folder=TEMPLATE_DIR)
 
 # ---------- Airflow 3 auth (JWT) ----------
 _token = {"value": None, "fetched_at": 0.0}
-TOKEN_TTL_SECONDS = 15 * 60  # refresh well before expiry
+TOKEN_TTL_SECONDS = 15 * 60
 
 
 def get_token(force: bool = False) -> str:
@@ -55,8 +54,7 @@ def load_metrics():
         return None
 
 
-def get_latest_run_info():
-    # Airflow 3 prefers ordering by 'run_after' for the most recent activity    
+def get_latest_run_info():  
     url = f"{WEBSERVER}/api/v2/dags/{TARGET_DAG_ID}/dagRuns?order_by=-run_after&limit=1"
 
     info = {
@@ -70,7 +68,7 @@ def get_latest_run_info():
 
     try:
         r = None
-        for attempt in range(2):  # retry once with a fresh token on 401
+        for attempt in range(2):
             headers = {
                 "Accept": "application/json",
                 "Authorization": f"Bearer {get_token(force=(attempt == 1))}",

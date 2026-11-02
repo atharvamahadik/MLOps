@@ -48,7 +48,7 @@ owner_task = BashOperator(
 # in Airflow (smtp_default) before it can send anything.
 # send_email = EmailOperator(
 #     task_id="send_email",
-#     to="your_email@example.com",
+#     to="atharvamahadik08@gmail.com",
 #     subject="Airflow_Lab2 finished",
 #     html_content="<p>The Airflow_Lab2 pipeline run has finished.</p>",
 #     dag=dag,
@@ -94,8 +94,8 @@ trigger_dag_task = TriggerDagRunOperator(
     trigger_dag_id="Airflow_Lab2_Flask",
     conf={"message": "Data from upstream DAG"},
     reset_dag_run=False,
-    wait_for_completion=False,          # don't block
-    trigger_rule=TriggerRule.ALL_DONE,  # still run even if something upstream fails
+    wait_for_completion=False,
+    trigger_rule=TriggerRule.ALL_DONE,
     dag=dag,
 )
 
